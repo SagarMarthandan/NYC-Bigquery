@@ -1,27 +1,54 @@
 version: 2
 
 models:
-  - name: dim_zones
-    description: "Dimension table mapping all taxi pickup and dropoff location IDs to zones and boroughs."
+  - name: dim_location
+    description: "Geographic mapping dimension for NYC Taxi Zones."
     columns:
       - name: location_id
-        description: "Primary Key. Location ID unique identifier."
+        description: "Primary key of the location zone."
+        tests:
+          - unique
+          - not_null
+      - name: borough
+        description: "NYC Borough name."
+      - name: zone
+        description: "Taxi zone name."
+
+  - name: dim_payment_type
+    description: "Mapping dimension for payment codes."
+    columns:
+      - name: payment_type_id
+        description: "Primary key code for payment type."
+        tests:
+          - unique
+          - not_null
+      - name: payment_description
+        description: "Human-readable payment type description."
+        tests:
+          - not_null
+
+  - name: dim_vendor
+    description: "Dimension containing registered taxi vendor companies."
+    columns:
+      - name: vendor_id
+        description: "Primary key code of vendor."
         tests:
           - unique
           - not_null
 
   - name: fact_trips
-    description: "Fact table for all validated yellow taxi trips in 2025. Partitioned by pickup_date."
+    description: "Central fact table storing all consolidated and sanitized trip transactions."
     columns:
-      - name: pickup_datetime
-        description: "Datetime when trip started."
+      - name: trip_id
+        description: "Surrogate primary key."
         tests:
+          - unique
           - not_null
       - name: pickup_location_id
-        description: "Reference to dim_zones location_id."
+        description: "Foreign key reference to dim_location."
         tests:
           - not_null
-      - name: payment_type_description
-        description: "Decoded description of payment type (e.g. Credit Card, Cash)."
+      - name: dropoff_location_id
+        description: "Foreign key reference to dim_location."
         tests:
           - not_null
