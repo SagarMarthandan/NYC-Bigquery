@@ -32,7 +32,7 @@ graph LR
 
     subgraph Transformation [dbt]
         BQ_RAW -->|stg_nyc_taxi__trips view| STG[Staging Layer]
-        STG -->|dim_zones + fact_trips tables| CORE[Core DWH Layer]
+        STG -->|fact_trips + dimension tables| CORE[Core DWH Layer]
         CORE -->|Partitioned & Aggregated Marts| MARTS[Analytics Mart Layer]
         MARTS --> BQ_MARTS
     end
@@ -58,14 +58,14 @@ graph LR
 
 | Component | Technology | Shield / Logo | Purpose |
 | :--- | :--- | :--- | :--- |
-| **Ingestion** | Airbyte | `![Airbyte](https://img.shields.io/badge/Airbyte-000000?style=flat-square&logo=airbyte&logoColor=white)` | Replicating taxi data from CSV/API sources into BigQuery. |
-| **Orchestration** | Apache Airflow | `![Airflow](https://img.shields.io/badge/Apache%20Airflow-017A9B?style=flat-square&logo=apache-airflow&logoColor=white)` | DAG workflow orchestration, scheduling, and error handling. |
-| **Warehouse** | Google BigQuery | `![BigQuery](https://img.shields.io/badge/Google%20BigQuery-669DF2?style=flat-square&logo=google-cloud&logoColor=white)` | Serverless cloud data warehouse scaling for petabytes of data. |
-| **Transformation**| dbt (data build tool) | `![dbt](https://img.shields.io/badge/dbt-FF694B?style=flat-square&logo=dbt&logoColor=white)` | Transforming raw tables into staging views, dimensions, facts, and marts. |
-| **Infrastructure**| Terraform | `![Terraform](https://img.shields.io/badge/Terraform-7B42BC?style=flat-square&logo=terraform&logoColor=white)` | Declarative GCP infrastructure provisioning (GCS buckets, datasets). |
-| **Containerization**| Docker & Compose | `![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat-square&logo=docker&logoColor=white)` | Local isolated runtime environments for Airflow and Postgres databases. |
-| **CI/CD** | GitHub Actions | `![GitHub Actions](https://img.shields.io/badge/GitHub%20Actions-2088FF?style=flat-square&logo=github-actions&logoColor=white)` | CI pipelines to automate SQL lints (SQLFluff) and tests on PR. |
-| **Languages** | Python, SQL, Jinja | `![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)` | Core pipeline logic, analytics SQL transformations, and dbt macros. |
+| **Ingestion** | Airbyte | ![Airbyte](https://img.shields.io/badge/Airbyte-FF6633?style=flat-square&logo=airbyte&logoColor=white) | Replicating taxi data from CSV/API sources into BigQuery. |
+| **Orchestration** | Apache Airflow | ![Airflow](https://img.shields.io/badge/Apache_Airflow-017A9B?style=flat-square&logo=apache-airflow&logoColor=white) | DAG workflow orchestration, scheduling, and error handling. |
+| **Warehouse** | Google BigQuery | ![BigQuery](https://img.shields.io/badge/Google_BigQuery-669DF2?style=flat-square&logo=google-cloud&logoColor=white) | Serverless cloud data warehouse scaling for petabytes of data. |
+| **Transformation**| dbt (data build tool) | ![dbt](https://img.shields.io/badge/dbt-FF694B?style=flat-square&logo=dbt&logoColor=white) | Transforming raw tables into staging views, dimensions, facts, and marts. |
+| **Infrastructure**| Terraform | ![Terraform](https://img.shields.io/badge/Terraform-7B42BC?style=flat-square&logo=terraform&logoColor=white) | Declarative GCP infrastructure provisioning (GCS buckets, datasets). |
+| **Containerization**| Docker & Compose | ![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat-square&logo=docker&logoColor=white) | Local isolated runtime environments for Airflow and Postgres databases. |
+| **CI/CD** | GitHub Actions | ![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-2088FF?style=flat-square&logo=github-actions&logoColor=white) | CI pipelines to automate SQL lints (SQLFluff) and tests on PR. |
+| **Languages** | Python, SQL, Jinja | ![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white) | Core pipeline logic, analytics SQL transformations, and dbt macros. |
 
 ---
 
@@ -77,8 +77,8 @@ The pipeline executes a modern ELT architecture split into clear, decoupled stag
 3. **Orchestration**: Apache Airflow schedules monthly runs, handling backfills, triggering data load routines, and executing downstream transformation tasks.
 4. **Transformations (T)**:
    - **Staging Layer**: Raw fields are selected, properly typed, and cast using clean SQL patterns. Anomalous rows (such as dates outside of 2025 or negative totals) are filtered out.
-   - **Core Layer**: Formats a star schema. `dim_zones` loads location maps, and `fact_trips` standardizes records, calling custom Jinja macros to decode encoded payments.
-   - **Marts Layer**: Dense analytical roll-ups optimized for high-performance dashboard queries (e.g., hourly congestion charts and monthly revenue tracking).
+   - **Core Layer**: Formats a star schema. `dim_location` loads geographic mappings, `dim_payment_type` decodes transaction codes, `dim_vendor` outlines TPEP providers, and `fact_trips` consolidates sanitized transactions.
+   - **Marts Layer**: Analytical tables optimized for business intelligence dashboards (e.g. route performance averages and daily surges).
 
 ---
 
@@ -105,12 +105,16 @@ ny-taxi-pipeline-2025/
 │   │   └── get_payment_type_description.sql # Jinja macro to decode payment types
 │   ├── models/
 │   │   ├── core/
-│   │   │   ├── dim_zones.sql    # Clean dimension table for taxi zone locations
-│   │   │   ├── fact_trips.sql   # Normalized trip records fact table
+│   │   │   ├── dim_location.sql # Geographic zone dimension
+│   │   │   ├── dim_payment_type.sql # Payment method dimension
+│   │   │   ├── dim_vendor.sql   # TPEP provider company dimension
+│   │   │   ├── fact_trips.sql   # Consolidated transactions fact table
 │   │   │   └── schema.yml       # Documentation & tests for the core layer
 │   │   ├── marts/
-│   │   │   ├── mart_monthly_fare_analytics.sql # Analytical mart for revenue & tips
-│   │   │   ├── mart_trip_patterns.sql # Analytical mart for congestion & routes
+│   │   │   ├── mart_hourly_demand.sql # Surge pattern & weekday hour metrics
+│   │   │   ├── mart_monthly_trip_summary.sql # Aggregate monthly averages
+│   │   │   ├── mart_payment_type_breakdown.sql # Payment slice & revenue share percentages
+│   │   │   ├── mart_route_performance.sql # Geographic route flows & absolute fares
 │   │   │   └── schema.yml       # Documentation & tests for the marts layer
 │   │   └── staging/
 │   │       ├── schema.yml       # Declares raw sources and basic staging validations
@@ -208,18 +212,24 @@ Our dbt model configurations utilize structural layer separation (Staging → Co
                              │
             ┌────────────────┴────────────────┐
             ▼ (Table)                         ▼ (Seed)
-      [ fact_trips ] ◄────────────────── [ dim_zones ]
+      [ fact_trips ] ◄────────────────── [ dim_location ]
+            │                                 │
+            │◄───────── [ dim_payment_type ]  │
+            │◄───────── [ dim_vendor ]        │
             │
-            ├─────────────────────────────────┐
-            ▼ (Daily Partitioned Table)       ▼ (Daily Partitioned Table)
-[ mart_monthly_fare_analytics ]      [ mart_trip_patterns ]
+  ┌─────────┴──────────┬──────────────────────┬─────────────────────────┐
+  ▼ (Table)            ▼ (Table)              ▼ (Table)                 ▼ (Table)
+[ mart_monthly_ ]    [ mart_route_ ]        [ mart_payment_ ]         [ mart_hourly_ ]
+[ trip_summary  ]    [ performance ]        [ type_breakdown]         [ demand       ]
 ```
 
-* **Staging Layer (`staging/`)**: Materialized as lightweight virtual `views`. Houses `stg_nyc_taxi__trips.sql`, doing column renaming, converting fields (e.g. `pulocationid` to `pickup_location_id`), casting data types, and filtering out outlier dates.
-* **Core Layer (`core/`)**: Materialized as solid, durable physical `tables`. Houses `dim_zones.sql` (geographic labels) and `fact_trips.sql` (merges trips with zones, and applies the `get_payment_type_description` macro).
-* **Marts Layer (`marts/`)**: Materialized as high-performance physical `tables`, partitioned daily by `pickup_date` to minimize BigQuery query costs.
-  - `mart_monthly_fare_analytics.sql`: Rolled-up financial statistics (average fares, total gross income, and passenger counts) by month and payment category.
-  - `mart_trip_patterns.sql`: High-resolution route analytics (origin to destination by pickup hour) to pinpoint peak congestion windows.
+* **Staging Layer (`staging/`)**: Materialized as lightweight virtual `views`. Houses `stg_nyc_taxi__trips.sql`, doing column renaming, converting fields, casting data types, and filtering out outlier dates.
+* **Core Layer (`core/`)**: Materialized as solid, durable physical `tables`. Houses `dim_location.sql` (geographic metadata mapping), `dim_payment_type.sql` (decoding categories), `dim_vendor.sql` (provider metadata), and `fact_trips.sql` (joins trips and maps keys to deterministic surrogate IDs).
+* **Marts Layer (`marts/`)**: Materialized as high-performance physical analytics tables to serve BI aggregates directly:
+  - `mart_monthly_trip_summary.sql`: Roll-ups of total rides, consolidated revenue sums, and averages of distances, passenger totals, and tip values.
+  - `mart_route_performance.sql`: Route patterns mapping pickup and dropoff zones and boroughs alongside transaction count weights, total revenues, and ride averages.
+  - `mart_payment_type_breakdown.sql`: Revenue slice breakdown by method, incorporating tipping trends and percentage share shares computed via window operations.
+  - `mart_hourly_demand.sql`: Temporal aggregates grouping rides by the hour (0-23) and weekday name (Monday-Sunday) to spot surge patterns.
 
 ---
 
@@ -228,10 +238,10 @@ Our dbt model configurations utilize structural layer separation (Staging → Co
 Data quality is treated as a first-class citizen in this architecture, combining built-in schema tests with custom assertions:
 
 ### A. Out-of-the-Box Schema Validation
-Declared in staging and core `schema.yml` configurations:
-* **`not_null`**: Enforced on primary keys (`location_id`), timestamps (`pickup_datetime`), and critical financial fields (`total_amount`).
-* **`unique`**: Enforces strict unique constraints on geographic location keys (`location_id` in `dim_zones`).
-* **`accepted_values`**: Declares bounds on code columns. For example, `payment_type_code` is validated to fall exactly inside `[1, 2, 3, 4, 5, 6]`.
+Declared in staging, core, and marts `schema.yml` configurations:
+* **`not_null`**: Enforced on primary keys (`location_id`, `trip_id`), timestamps (`pickup_datetime`), and critical identifiers.
+* **`unique`**: Enforces strict unique constraints on geographic location keys (`location_id` in `dim_location`) and primary keys in payment dimensions.
+* **`accepted_values`**: Declares bounds on fields. For example, `hour_of_day` is validated inside standard hours `[0-23]`, and `day_of_week` strictly permits standard weekdays.
 
 ### B. Custom Singular Assertions
 * **`assert_trip_fare_is_positive`**: A custom SQL test located in the `tests/` directory. It selects records where the base `fare_amount` drops below zero. If any records are returned, the test fails, preventing bad transformations from merging to production.
@@ -240,7 +250,7 @@ Declared in staging and core `schema.yml` configurations:
 
 ## 📈 Modules Status
 
-Our current build progress is summarized below:
+Our pipeline modules build progress is summarized below:
 
 | Feature/Module | Status | Details |
 | :--- | :--- | :--- |
@@ -248,10 +258,10 @@ Our current build progress is summarized below:
 | **Airflow DAGs** | 🟢 Done | Configured scheduler pipelines and manual task operators. |
 | **GCP Provisioning** | 🟢 Done | Terraform main, variables, and outputs fully mapped. |
 | **dbt Staging Models** | 🟢 Done | Views and cleaning filters implemented. |
-| **dbt Core Models** | 🟢 Done | Fact and Dimension tables running on BigQuery. |
-| **dbt Mart Layer** | 🚧 In Progress | Aggregating monthly and route patterns for BI consumption. |
+| **dbt Core Models** | 🟢 Done | Location, Vendor, and Payment dimensions running on BigQuery. |
+| **dbt Mart Layer** | 🟢 Done | All 4 analytical tables (Monthly, Routes, Payments, Hourly) built. |
+| **dbt Test Suite Expansion** | 🟢 Done | Implemented schema tests and singular positive fare checks. |
 | **CI/CD Pipeline** | 🚧 In Progress | Setting up GitHub Actions linter and automatic tests on PR. |
-| **dbt Test Expansion** | 🚧 In Progress | Coding custom data validation alerts. |
 | **BI Integration** | 🔲 Planned | Looker Studio dashboard setup for route heatmaps. |
 
 *Legend: 🟢 Done | 🚧 In Progress | 🔲 Planned*
