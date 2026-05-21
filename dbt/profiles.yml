@@ -1,0 +1,23 @@
+ny_taxi_pipeline:
+  target: dev
+  outputs:
+    dev:
+      type: bigquery
+      method: service-account
+      keyfile: /opt/airflow/keys/gcp-service-account.json
+      project: ny-taxi-pipeline-2025
+      dataset: dbt_dev_nyc_taxi
+      threads: 4
+      timeout_seconds: 300
+      location: US
+      priority: interactive
+    prod:
+      type: bigquery
+      method: service-account
+      keyfile: "{{ env_var('DBT_ENV_SECRET_GCP_KEY') }}"
+      project: ny-taxi-pipeline-2025
+      dataset: dbt_prod_nyc_taxi
+      threads: 8
+      timeout_seconds: 300
+      location: US
+      priority: interactive

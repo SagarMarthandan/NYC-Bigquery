@@ -1,0 +1,51 @@
+{
+  "connectionId": "f78b1d92-7483-492d-94c9-0414ab2825bf",
+  "name": "NYC Taxi CSV API to BigQuery Raw",
+  "sourceId": "50c8e23f-bf11-4a4f-ba30-d3cd127bf7c8",
+  "destinationId": "97e68bc5-ee53-4318-8f8b-fdfc972dfa3d",
+  "syncCatalog": {
+    "streams": [
+      {
+        "stream": {
+          "name": "yellow_tripdata_2025",
+          "jsonSchema": {
+            "type": "object",
+            "properties": {
+              "VendorID": {"type": "integer"},
+              "tpep_pickup_datetime": {"type": "string", "format": "date-time"},
+              "tpep_dropoff_datetime": {"type": "string", "format": "date-time"},
+              "passenger_count": {"type": "integer"},
+              "trip_distance": {"type": "number"},
+              "RatecodeID": {"type": "integer"},
+              "store_and_fwd_flag": {"type": "string"},
+              "PULocationID": {"type": "integer"},
+              "DOLocationID": {"type": "integer"},
+              "payment_type": {"type": "integer"},
+              "fare_amount": {"type": "number"},
+              "extra": {"type": "number"},
+              "mta_tax": {"type": "number"},
+              "tip_amount": {"type": "number"},
+              "tolls_amount": {"type": "number"},
+              "improvement_surcharge": {"type": "number"},
+              "total_amount": {"type": "number"},
+              "congestion_surcharge": {"type": "number"}
+            }
+          },
+          "supportedSyncModes": ["full_refresh", "incremental"],
+          "sourceDefinedPrimaryKey": []
+        },
+        "config": {
+          "syncMode": "incremental",
+          "cursorField": ["tpep_pickup_datetime"],
+          "destinationSyncMode": "append_dedup",
+          "primaryKey": [["VendorID"], ["tpep_pickup_datetime"]]
+        }
+      }
+    ]
+  },
+  "schedule": {
+    "units": 1,
+    "timeUnit": "months"
+  },
+  "status": "active"
+}

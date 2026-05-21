@@ -1,0 +1,27 @@
+version: 2
+
+models:
+  - name: dim_zones
+    description: "Dimension table mapping all taxi pickup and dropoff location IDs to zones and boroughs."
+    columns:
+      - name: location_id
+        description: "Primary Key. Location ID unique identifier."
+        tests:
+          - unique
+          - not_null
+
+  - name: fact_trips
+    description: "Fact table for all validated yellow taxi trips in 2025. Partitioned by pickup_date."
+    columns:
+      - name: pickup_datetime
+        description: "Datetime when trip started."
+        tests:
+          - not_null
+      - name: pickup_location_id
+        description: "Reference to dim_zones location_id."
+        tests:
+          - not_null
+      - name: payment_type_description
+        description: "Decoded description of payment type (e.g. Credit Card, Cash)."
+        tests:
+          - not_null

@@ -1,0 +1,32 @@
+name: 'ny_taxi_pipeline'
+version: '1.0.0'
+config-version: 2
+
+# Which profile to use from profiles.yml
+profile: 'ny_taxi_pipeline'
+
+# Path configurations
+model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+# Materialization configurations
+models:
+  ny_taxi_pipeline:
+    staging:
+      +materialized: view
+    core:
+      +materialized: table
+    marts:
+      +materialized: table
+      +partition_by:
+        field: pickup_date
+        data_type: date
+        granularity: day

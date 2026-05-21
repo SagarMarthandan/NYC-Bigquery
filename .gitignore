@@ -1,0 +1,38 @@
+# Environments
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+pip-log.txt
+
+# dbt
+target/
+dbt_modules/
+dbt_packages/
+logs/
+*.log
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+*.tfvars
+*.tfvars.json
+override.tf
+override.tf.json
+
+# IDEs and OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db

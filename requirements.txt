@@ -1,0 +1,16 @@
+# Orchestration & Workflow Management
+apache-airflow==2.8.1
+
+# Data Transformation & Testing
+dbt-bigquery==1.7.2
+sqlfluff-templater-dbt==2.3.5
+
+# Python SDKs & Utilities
+google-cloud-bigquery==3.17.0
+pandas==2.2.0
+pyarrow==15.0.0
+
+# Code Quality & Development
+black==24.1.1
+flake8==7.0.0
+pytest==8.0.0

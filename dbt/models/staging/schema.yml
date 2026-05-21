@@ -1,0 +1,34 @@
+version: 2
+
+sources:
+  - name: raw_nyc_taxi
+    database: ny-taxi-pipeline-2025
+    schema: raw_nyc_taxi
+    tables:
+      - name: yellow_tripdata_2025
+
+models:
+  - name: stg_nyc_taxi__trips
+    description: "Staging model for NYC Yellow Taxi trip data 2025. Renames and casts fields to clean types."
+    columns:
+      - name: vendor_id
+        description: "A code indicating the TPEP provider that provided the record."
+        tests:
+          - not_null
+      - name: pickup_datetime
+        description: "The date and time when the meter was engaged."
+        tests:
+          - not_null
+      - name: dropoff_datetime
+        description: "The date and time when the meter was disengaged."
+        tests:
+          - not_null
+      - name: payment_type_code
+        description: "A numeric code signifying how the passenger paid for the trip."
+        tests:
+          - accepted_values:
+              values: [1, 2, 3, 4, 5, 6]
+      - name: total_amount
+        description: "The total amount charged to passengers. Does not include cash tips."
+        tests:
+          - not_null

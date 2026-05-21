@@ -1,0 +1,36 @@
+version: 2
+
+models:
+  - name: mart_monthly_fare_analytics
+    description: "Monthly aggregation of trips, fare totals, tip averages, and gross revenues by payment method."
+    columns:
+      - name: pickup_month
+        description: "Truncated month date of pickup (e.g. 2025-01-01)."
+        tests:
+          - not_null
+      - name: payment_type_description
+        description: "Human-readable payment category."
+        tests:
+          - not_null
+      - name: total_trips
+        description: "Total ride transactions in month for payment type."
+        tests:
+          - not_null
+
+  - name: mart_trip_patterns
+    description: "Borough-to-borough route metrics aggregated by hour of the day."
+    columns:
+      - name: pickup_borough
+        description: "Origin borough."
+        tests:
+          - not_null
+      - name: dropoff_borough
+        description: "Destination borough."
+        tests:
+          - not_null
+      - name: pickup_hour
+        description: "Hour of day (0-23) when ride was initiated."
+        tests:
+          - not_null
+          - accepted_values:
+              values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23]
